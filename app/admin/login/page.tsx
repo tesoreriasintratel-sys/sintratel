@@ -27,7 +27,7 @@ export default function LoginPage() {
 
     if (error) {
       console.error('[Login] Supabase error completo:', error)
-      setError('Correo o contraseña incorrectos')
+      setError(`Error Supabase: ${error.message} (status: ${error.status})`)
       setLoading(false)
       return
     }
