@@ -1,6 +1,7 @@
 'use client'
 
-import { MapPin, Phone, Mail, Clock } from 'lucide-react'
+import { useState } from 'react'
+import { MapPin, Phone, Mail, Clock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react'
 
 const info = [
   { icon: MapPin, label: 'Nombre', value: 'Sintratel - Colombia' },
@@ -10,7 +11,42 @@ const info = [
   { icon: Clock, label: 'Horario', value: 'Lunes a Viernes 8:00am - 5:00pm' },
 ]
 
+const empty = { nombre: '', email: '', telefono: '', empresa: '', mensaje: '' }
+
 export default function ContactSection() {
+  const [form, setForm] = useState(empty)
+  const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle')
+  const [errorMsg, setErrorMsg] = useState('')
+
+  function set(field: string, value: string) {
+    setForm(p => ({ ...p, [field]: value }))
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    setStatus('sending')
+    setErrorMsg('')
+
+    try {
+      const res = await fetch('/api/contacto', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(form),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        setErrorMsg(data.error ?? 'Error al enviar')
+        setStatus('error')
+        return
+      }
+      setStatus('success')
+      setForm(empty)
+    } catch {
+      setErrorMsg('Error de conexión. Intenta de nuevo.')
+      setStatus('error')
+    }
+  }
+
   return (
     <section id="contacto" className="py-20 bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -49,56 +85,104 @@ export default function ContactSection() {
           {/* Form */}
           <div className="bg-gray-50 rounded-2xl p-8 border border-gray-100">
             <h3 className="text-xl font-bold text-gray-900 mb-6">Envíanos un mensaje</h3>
-            <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
-              <div className="grid sm:grid-cols-2 gap-4">
+
+            {status === 'success' ? (
+              <div className="flex flex-col items-center justify-center py-12 text-center gap-4">
+                <CheckCircle size={48} className="text-green-500" />
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Nombre</label>
+                  <p className="text-lg font-semibold text-gray-900">¡Mensaje enviado!</p>
+                  <p className="text-gray-500 text-sm mt-1">
+                    Nos comunicaremos contigo pronto al correo indicado.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setStatus('idle')}
+                  className="mt-2 text-sm text-[#003087] font-medium hover:underline"
+                >
+                  Enviar otro mensaje
+                </button>
+              </div>
+            ) : (
+              <form className="space-y-4" onSubmit={handleSubmit}>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-1">
+                      Nombre completo <span className="text-red-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={form.nombre}
+                      onChange={e => set('nombre', e.target.value)}
+                      required
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087] focus:border-transparent"
+                      placeholder="Tu nombre"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium text-gray-700 block mb-1">Teléfono</label>
+                    <input
+                      type="tel"
+                      value={form.telefono}
+                      onChange={e => set('telefono', e.target.value)}
+                      className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087] focus:border-transparent"
+                      placeholder="+57 300 000 0000"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">
+                    Correo electrónico <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    value={form.email}
+                    onChange={e => set('email', e.target.value)}
+                    required
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087] focus:border-transparent"
+                    placeholder="tu@correo.com"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Empresa donde trabaja</label>
                   <input
                     type="text"
+                    value={form.empresa}
+                    onChange={e => set('empresa', e.target.value)}
                     className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087] focus:border-transparent"
-                    placeholder="Tu nombre"
+                    placeholder="Nombre de tu empresa"
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Teléfono</label>
-                  <input
-                    type="tel"
-                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087] focus:border-transparent"
-                    placeholder="Tu teléfono"
+                  <label className="text-sm font-medium text-gray-700 block mb-1">Mensaje o motivo de afiliación</label>
+                  <textarea
+                    rows={4}
+                    value={form.mensaje}
+                    onChange={e => set('mensaje', e.target.value)}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087] focus:border-transparent resize-none"
+                    placeholder="¿En qué podemos ayudarte?"
                   />
                 </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Correo electrónico</label>
-                <input
-                  type="email"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087] focus:border-transparent"
-                  placeholder="tu@correo.com"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Empresa donde trabaja</label>
-                <input
-                  type="text"
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087] focus:border-transparent"
-                  placeholder="Nombre de tu empresa"
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700 block mb-1">Mensaje</label>
-                <textarea
-                  rows={4}
-                  className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087] focus:border-transparent resize-none"
-                  placeholder="¿En qué podemos ayudarte?"
-                />
-              </div>
-              <button
-                type="submit"
-                className="w-full bg-[#003087] text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-[#001F5B] transition-colors"
-              >
-                Enviar mensaje
-              </button>
-            </form>
+
+                {status === 'error' && (
+                  <div className="flex items-start gap-2 bg-red-50 border border-red-200 text-red-700 rounded-lg px-3 py-2 text-sm">
+                    <AlertCircle size={16} className="shrink-0 mt-0.5" />
+                    {errorMsg}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={status === 'sending'}
+                  className="w-full bg-[#003087] text-white rounded-lg py-2.5 text-sm font-semibold hover:bg-[#001F5B] transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+                >
+                  {status === 'sending' ? (
+                    <><Loader2 size={16} className="animate-spin" /> Enviando...</>
+                  ) : (
+                    'Enviar solicitud'
+                  )}
+                </button>
+              </form>
+            )}
           </div>
         </div>
       </div>

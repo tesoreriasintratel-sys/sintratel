@@ -1,36 +1,54 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SINTRATEL - Panel Administrativo
 
-## Getting Started
+Panel de gestión para el Sindicato de Trabajadores de Telecomunicaciones de Colombia.
 
-First, run the development server:
+## Tecnologías
+
+- **Next.js 14** (App Router)
+- **Supabase** (base de datos PostgreSQL)
+- **Tailwind CSS** + shadcn/ui
+- **Resend** (envío de correos desde formulario de contacto)
+
+## Variables de entorno
+
+Copia `.env.example` a `.env.local` y completa los valores:
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cp .env.example .env.local
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Variable | Descripción |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL del proyecto en Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Clave anon de Supabase |
+| `SUPABASE_SERVICE_ROLE_KEY` | Clave service_role de Supabase (solo servidor) |
+| `RESEND_API_KEY` | API Key de Resend para envío de correos |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Obtener RESEND_API_KEY (gratis)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Regístrate en [resend.com](https://resend.com) (plan gratuito: 3 000 correos/mes)
+2. Ve a **API Keys → Create API Key**
+3. Copia la clave y agrégala como `RESEND_API_KEY` en:
+   - `.env.local` para desarrollo local
+   - Vercel → Project Settings → Environment Variables para producción
 
-## Learn More
+## Desarrollo local
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm install
+npm run dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Abre [http://localhost:3000](http://localhost:3000)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy en Vercel
 
-## Deploy on Vercel
+1. Conecta el repositorio en [vercel.com](https://vercel.com)
+2. Agrega las variables de entorno en **Project Settings → Environment Variables**
+3. Haz push a `main` para desplegar automáticamente
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Acceso al panel admin
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Ruta: `/admin/login`
+
+El super admin inicial se configura con las variables `ADMIN_EMAIL` y `ADMIN_PASSWORD` (por defecto `tesoreriasintratel@gmail.com` / `Panel2026!`).
