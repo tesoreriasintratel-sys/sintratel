@@ -32,11 +32,16 @@ export async function GET() {
 
   return NextResponse.json({
     runtime: 'live',
-    env: {
-      url: url ? url.slice(0, 42) : 'NO CONFIGURADO',
-      key: key ? key.slice(0, 20) + '...' : 'NO CONFIGURADO',
+    supabase: {
+      url: url ? url.slice(0, 42) : 'MISSING',
+      key: key ? 'SET' : 'MISSING',
+      get_test: getResult,
+      post_test: postResult,
     },
-    get_test: getResult,
-    post_test: postResult,
+    admin: {
+      ADMIN_EMAIL: process.env.ADMIN_EMAIL ? 'SET' : 'MISSING',
+      ADMIN_PASSWORD: process.env.ADMIN_PASSWORD ? 'SET' : 'MISSING',
+      ADMIN_TOKEN_SECRET: process.env.ADMIN_TOKEN_SECRET ? 'SET' : 'MISSING',
+    },
   })
 }
