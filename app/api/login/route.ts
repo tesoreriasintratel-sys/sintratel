@@ -1,39 +1,41 @@
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export async function POST(request: Request) {
+  let step = 'start'
   try {
-    const { email, password } = await request.json()
+    step = 'reading_body'
+    const body = await request.text()
 
-    if (!email || !password) {
-      return NextResponse.json({ error: 'Completa todos los campos' }, { status: 400 })
-    }
+    step = 'parsing_json'
+    const { email, password } = JSON.parse(body)
 
+    step = 'checking_env'
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
     const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
     if (!supabaseUrl || !supabaseKey) {
-      return NextResponse.json({ error: 'Error de configuración del servidor' }, { status: 500 })
+      return NextResponse.json({ error: 'ENV VARS MISSING', step }, { status: 500 })
     }
 
+    step = 'fetching_supabase'
     const res = await fetch(`${supabaseUrl}/auth/v1/token?grant_type=password`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': supabaseKey,
-      },
+      headers: { 'Content-Type': 'application/json', apikey: supabaseKey },
       body: JSON.stringify({ email, password }),
     })
 
+    step = 'reading_response'
     const data = await res.json()
 
+    step = 'checking_result'
     if (!res.ok) {
       const msg = data.error_description ?? data.msg ?? data.error ?? 'Credenciales incorrectas'
-      return NextResponse.json({ error: msg }, { status: 400 })
+      return NextResponse.json({ error: msg, step }, { status: 400 })
     }
 
-    const cookieStore = cookies()
-    cookieStore.set('sintratel_token', data.access_token, {
+    step = 'setting_cookies'
+    const response = NextResponse.json({ success: true })
+    response.cookies.set('sintratel_token', data.access_token, {
       httpOnly: true,
       secure: true,
       sameSite: 'lax',
@@ -41,7 +43,7 @@ export async function POST(request: Request) {
       path: '/',
     })
     if (data.refresh_token) {
-      cookieStore.set('sintratel_refresh', data.refresh_token, {
+      response.cookies.set('sintratel_refresh', data.refresh_token, {
         httpOnly: true,
         secure: true,
         sameSite: 'lax',
@@ -49,10 +51,11 @@ export async function POST(request: Request) {
         path: '/',
       })
     }
+    return response
 
-    return NextResponse.json({ success: true })
   } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Error desconocido'
-    return NextResponse.json({ error: `Error del servidor: ${msg}` }, { status: 500 })
+    const msg = err instanceof Error ? err.message : String(err)
+    const type = err instanceof Error ? err.constructor.name : typeof err
+    return NextResponse.json({ error: msg, errorType: type, step }, { status: 500 })
   }
 }
