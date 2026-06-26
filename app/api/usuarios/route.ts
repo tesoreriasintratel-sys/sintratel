@@ -76,7 +76,7 @@ export async function POST(request: Request) {
     if (!nombre || !email || !password || !newRol) {
       return NextResponse.json({ error: 'Faltan campos requeridos' }, { status: 400 })
     }
-    if (!['super_admin', 'lectura_escritura', 'solo_lectura'].includes(newRol)) {
+    if (!['super_admin', 'read_write', 'read_only'].includes(newRol)) {
       return NextResponse.json({ error: 'Rol inválido' }, { status: 400 })
     }
     if (password.length < 6) {

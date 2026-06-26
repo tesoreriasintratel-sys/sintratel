@@ -1,4 +1,4 @@
-export type UserRole = 'super_admin' | 'solo_lectura' | 'lectura_escritura'
+export type UserRole = 'super_admin' | 'read_write' | 'read_only'
 
 export interface Profile {
   id: string

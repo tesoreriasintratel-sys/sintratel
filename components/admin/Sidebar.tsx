@@ -8,9 +8,9 @@ import { cn } from '@/lib/utils'
 import type { UserRole } from '@/types'
 
 const navItems = [
-  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['super_admin', 'solo_lectura', 'lectura_escritura'] },
-  { href: '/admin/dashboard/afiliados', label: 'Afiliados', icon: Users, roles: ['super_admin', 'solo_lectura', 'lectura_escritura'] },
-  { href: '/admin/dashboard/junta', label: 'Junta Directiva', icon: Shield, roles: ['super_admin', 'solo_lectura', 'lectura_escritura'] },
+  { href: '/admin/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['super_admin', 'read_only', 'read_write'] },
+  { href: '/admin/dashboard/afiliados', label: 'Afiliados', icon: Users, roles: ['super_admin', 'read_only', 'read_write'] },
+  { href: '/admin/dashboard/junta', label: 'Junta Directiva', icon: Shield, roles: ['super_admin', 'read_only', 'read_write'] },
   { href: '/admin/dashboard/usuarios', label: 'Usuarios', icon: User, roles: ['super_admin'] },
 ]
 

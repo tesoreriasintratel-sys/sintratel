@@ -6,8 +6,8 @@ import type { Profile } from '@/types'
 
 const roleLabels: Record<string, string> = {
   super_admin: 'Super Admin',
-  lectura_escritura: 'Lectura/Escritura',
-  solo_lectura: 'Solo Lectura',
+  read_write: 'Lectura/Escritura',
+  read_only: 'Solo Lectura',
 }
 
 interface TopNavProps {

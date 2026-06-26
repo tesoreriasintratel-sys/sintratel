@@ -19,14 +19,14 @@ const formatDate = (d: string) => format(new Date(d), 'dd/MM/yyyy', { locale: es
 
 const roleLabels: Record<string, string> = {
   super_admin: 'Super Admin',
-  lectura_escritura: 'Lectura / Escritura',
-  solo_lectura: 'Solo Lectura',
+  read_write: 'Lectura / Escritura',
+  read_only: 'Solo Lectura',
 }
 
 const roleBadge: Record<string, string> = {
   super_admin: 'bg-[#003087] text-white hover:bg-[#003087]',
-  lectura_escritura: 'bg-blue-100 text-blue-800 hover:bg-blue-100',
-  solo_lectura: 'bg-gray-100 text-gray-700 hover:bg-gray-100',
+  read_write: 'bg-blue-100 text-blue-800 hover:bg-blue-100',
+  read_only: 'bg-gray-100 text-gray-700 hover:bg-gray-100',
 }
 
 interface Props {

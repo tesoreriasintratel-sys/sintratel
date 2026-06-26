@@ -13,12 +13,12 @@ interface Props {
 
 const roles: { value: UserRole; label: string; description: string }[] = [
   {
-    value: 'solo_lectura',
+    value: 'read_only',
     label: 'Solo Lectura',
     description: 'Puede ver afiliados y junta directiva, no puede modificar datos.',
   },
   {
-    value: 'lectura_escritura',
+    value: 'read_write',
     label: 'Lectura / Escritura',
     description: 'Puede crear y editar afiliados y junta directiva.',
   },
@@ -29,7 +29,7 @@ const roles: { value: UserRole; label: string; description: string }[] = [
   },
 ]
 
-const emptyCreate = { nombre: '', email: '', password: '', confirmPassword: '', rol: 'solo_lectura' as UserRole }
+const emptyCreate = { nombre: '', email: '', password: '', confirmPassword: '', rol: 'read_only' as UserRole }
 
 export default function UsuarioForm({ open, usuario, onClose, onSaved }: Props) {
   const [form, setForm] = useState(emptyCreate)
@@ -76,7 +76,7 @@ export default function UsuarioForm({ open, usuario, onClose, onSaved }: Props) 
         if (!res.ok) { setError(data.error ?? 'Error al actualizar'); return }
         toast.success('Usuario actualizado correctamente')
       } else {
-        const res = await fetch('/api/usuarios', {
+        const res = await fetch('/api/usuarios/crear', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -36,7 +36,7 @@ export default function AfiliadosTable({ initialData, role }: Props) {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<Afiliado | null>(null)
 
-  const canWrite = role === 'super_admin' || role === 'lectura_escritura'
+  const canWrite = role === 'super_admin' || role === 'read_write'
   const isAdmin = role === 'super_admin'
 
   const filtered = data.filter(a =>

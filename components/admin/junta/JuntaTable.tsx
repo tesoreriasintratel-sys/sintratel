@@ -32,7 +32,7 @@ export default function JuntaTable({ initialData, role }: Props) {
   const [formOpen, setFormOpen] = useState(false)
   const [editing, setEditing] = useState<JuntaDirectiva | null>(null)
 
-  const canWrite = role === 'super_admin' || role === 'lectura_escritura'
+  const canWrite = role === 'super_admin' || role === 'read_write'
   const isAdmin = role === 'super_admin'
 
   const filtered = data.filter(j =>
