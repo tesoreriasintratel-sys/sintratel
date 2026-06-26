@@ -95,15 +95,12 @@ export async function POST(request: Request) {
     body: JSON.stringify({ nombre: nombre.trim(), email: email.trim().toLowerCase(), rol, password_hash, activo: true }),
   })
 
-  if (res.status === 409 || res.status === 422) {
-    return NextResponse.json({ error: 'Ya existe un usuario con ese correo' }, { status: 400 })
-  }
   if (!res.ok) {
     const text = await res.text()
-    if (text.includes('duplicate')) {
+    if (res.status === 409 || res.status === 422 || text.includes('duplicate') || text.includes('unique')) {
       return NextResponse.json({ error: 'Ya existe un usuario con ese correo' }, { status: 400 })
     }
-    return NextResponse.json({ error: 'Error al crear usuario' }, { status: 500 })
+    return NextResponse.json({ error: `Error al guardar (${res.status}): ${text.slice(0, 300)}` }, { status: 500 })
   }
 
   return NextResponse.json({ success: true })

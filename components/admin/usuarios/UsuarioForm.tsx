@@ -64,35 +64,40 @@ export default function UsuarioForm({ open, usuario, onClose, onSaved }: Props) 
 
     setSaving(true)
 
-    if (usuario) {
-      const res = await fetch(`/api/usuarios/${usuario.id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nombre: form.nombre.trim(), rol: form.rol }),
-      })
-      setSaving(false)
-      const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Error al actualizar'); return }
-      toast.success('Usuario actualizado correctamente')
-    } else {
-      const res = await fetch('/api/usuarios', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nombre: form.nombre.trim(),
-          email: form.email.trim(),
-          password: form.password,
-          rol: form.rol,
-        }),
-      })
-      setSaving(false)
-      const data = await res.json()
-      if (!res.ok) { setError(data.error ?? 'Error al crear usuario'); return }
-      toast.success('Usuario creado exitosamente.')
-    }
+    try {
+      if (usuario) {
+        const res = await fetch(`/api/usuarios/${usuario.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ nombre: form.nombre.trim(), rol: form.rol }),
+        })
+        setSaving(false)
+        const data = await res.json()
+        if (!res.ok) { setError(data.error ?? 'Error al actualizar'); return }
+        toast.success('Usuario actualizado correctamente')
+      } else {
+        const res = await fetch('/api/usuarios', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            nombre: form.nombre.trim(),
+            email: form.email.trim(),
+            password: form.password,
+            rol: form.rol,
+          }),
+        })
+        setSaving(false)
+        const data = await res.json()
+        if (!res.ok) { setError(data.error ?? 'Error al crear usuario'); return }
+        toast.success('Usuario creado exitosamente.')
+      }
 
-    onSaved()
-    onClose()
+      onSaved()
+      onClose()
+    } catch (err) {
+      setSaving(false)
+      setError('Error: ' + (err instanceof Error ? err.message : String(err)))
+    }
   }
 
   const selectedRole = roles.find(r => r.value === form.rol)
