@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { Menu, LogOut, User, ChevronDown } from 'lucide-react'
 import type { Profile } from '@/types'
 
@@ -21,7 +20,6 @@ export default function TopNav({ profile, onMenuClick }: TopNavProps) {
   const [loading, setLoading] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
-  // Cerrar al hacer clic fuera
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -35,8 +33,7 @@ export default function TopNav({ profile, onMenuClick }: TopNavProps) {
   async function handleLogout() {
     setLoading(true)
     setOpen(false)
-    const supabase = createClient()
-    await supabase.auth.signOut()
+    await fetch('/api/logout', { method: 'POST' })
     window.location.href = '/admin/login'
   }
 
@@ -49,7 +46,6 @@ export default function TopNav({ profile, onMenuClick }: TopNavProps) {
 
   return (
     <header className="h-14 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-6">
-      {/* Botón menú móvil */}
       <button
         onClick={onMenuClick}
         className="lg:hidden p-1.5 rounded-md text-gray-500 hover:bg-gray-100"
@@ -59,13 +55,11 @@ export default function TopNav({ profile, onMenuClick }: TopNavProps) {
 
       <div className="flex-1 lg:flex-none" />
 
-      {/* Dropdown usuario */}
       <div className="relative" ref={ref}>
         <button
           onClick={() => setOpen(v => !v)}
           className="inline-flex items-center gap-2 h-9 px-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer outline-none"
         >
-          {/* Avatar */}
           <div className="w-7 h-7 rounded-full bg-[#003087] flex items-center justify-center text-white text-xs font-semibold shrink-0">
             {initials}
           </div>
@@ -78,16 +72,12 @@ export default function TopNav({ profile, onMenuClick }: TopNavProps) {
           <ChevronDown size={14} className="text-gray-400" />
         </button>
 
-        {/* Panel desplegable */}
         {open && (
           <div className="absolute right-0 top-full mt-1 w-52 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
-            {/* Info usuario */}
             <div className="px-4 py-3 border-b border-gray-100">
               <p className="text-sm font-medium text-gray-900 truncate">{profile.nombre}</p>
               <p className="text-xs text-gray-500 truncate">{profile.email}</p>
             </div>
-
-            {/* Opciones */}
             <div className="py-1">
               <button
                 disabled
@@ -97,7 +87,6 @@ export default function TopNav({ profile, onMenuClick }: TopNavProps) {
                 Mi perfil
               </button>
             </div>
-
             <div className="border-t border-gray-100 py-1">
               <button
                 onClick={handleLogout}

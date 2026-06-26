@@ -1,46 +1,36 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+function decodeJWTPayload(token: string) {
+  try {
+    const base64url = token.split('.')[1]
+    const base64 = base64url.replace(/-/g, '+').replace(/_/g, '/')
+    return JSON.parse(atob(base64))
+  } catch {
+    return null
+  }
+}
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
-
+export function middleware(request: NextRequest) {
   const isAdminPath = request.nextUrl.pathname.startsWith('/admin')
   const isLoginPath = request.nextUrl.pathname === '/admin/login'
 
-  if (isAdminPath && !isLoginPath && !user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/admin/login'
-    return NextResponse.redirect(url)
+  const token = request.cookies.get('sintratel_token')?.value
+  let isAuthenticated = false
+
+  if (token) {
+    const payload = decodeJWTPayload(token)
+    isAuthenticated = !!payload && payload.exp > Math.floor(Date.now() / 1000)
   }
 
-  if (isLoginPath && user) {
-    const url = request.nextUrl.clone()
-    url.pathname = '/admin/dashboard'
-    return NextResponse.redirect(url)
+  if (isAdminPath && !isLoginPath && !isAuthenticated) {
+    return NextResponse.redirect(new URL('/admin/login', request.url))
   }
 
-  return supabaseResponse
+  if (isLoginPath && isAuthenticated) {
+    return NextResponse.redirect(new URL('/admin/dashboard', request.url))
+  }
+
+  return NextResponse.next()
 }
 
 export const config = {
