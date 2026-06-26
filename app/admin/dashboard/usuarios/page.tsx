@@ -1,69 +1,45 @@
-import { cookies } from 'next/headers'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useEffect, useState } from 'react'
 import { ShieldAlert } from 'lucide-react'
 import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Skeleton } from '@/components/ui/skeleton'
 import UsuariosTable from '@/components/admin/usuarios/UsuariosTable'
 import type { Profile } from '@/types'
 
-const ADMIN_SECRET = process.env.ADMIN_TOKEN_SECRET ?? 'sintratel-secret-k9x2m7p4q8'
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL ?? 'tesoreriasintratel@gmail.com'
+export default function UsuariosPage() {
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [usuarios, setUsuarios] = useState<Profile[]>([])
+  const [loading, setLoading] = useState(true)
 
-async function getAdminProfile(): Promise<Profile | null> {
-  const cookieStore = cookies()
-  const token = cookieStore.get('sintratel_token')?.value
-  if (!token || token !== ADMIN_SECRET) return null
+  useEffect(() => {
+    Promise.all([
+      fetch('/api/me').then(r => r.json()),
+      fetch('/api/usuarios').then(r => r.ok ? r.json() : []),
+    ]).then(([me, list]) => {
+      setProfile(me)
+      setUsuarios(Array.isArray(list) ? list : [])
+    }).catch(() => {
+      setProfile(null)
+    }).finally(() => {
+      setLoading(false)
+    })
+  }, [])
 
-  const email = cookieStore.get('sintratel_user')?.value ?? ADMIN_EMAIL
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!supabaseUrl || !supabaseKey) return null
-
-  try {
-    const res = await fetch(
-      `${supabaseUrl}/rest/v1/admin_users?email=eq.${encodeURIComponent(email)}&select=id,email,nombre,rol,activo,created_at,updated_at&limit=1`,
-      { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }, cache: 'no-store' }
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="mb-6">
+          <Skeleton className="h-8 w-56 mb-2" />
+          <Skeleton className="h-4 w-80" />
+        </div>
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-48 w-full rounded-xl" />
+      </div>
     )
-    if (res.ok) {
-      const rows = await res.json()
-      return rows[0] ?? null
-    }
-  } catch {
-    // fallback
   }
 
-  return {
-    id: '00000000-0000-0000-0000-000000000001',
-    email,
-    nombre: 'Administrador',
-    rol: 'super_admin',
-    activo: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  }
-}
-
-async function listUsers(): Promise<Profile[]> {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-  if (!supabaseUrl || !supabaseKey) return []
-
-  try {
-    const res = await fetch(
-      `${supabaseUrl}/rest/v1/admin_users?select=id,email,nombre,rol,activo,created_at,updated_at&order=nombre.asc`,
-      { headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` }, cache: 'no-store' }
-    )
-    if (res.ok) return await res.json()
-  } catch {
-    // ignore
-  }
-  return []
-}
-
-export default async function UsuariosPage() {
-  const profile = await getAdminProfile()
-  if (!profile) redirect('/admin/login')
-
-  if (profile.rol !== 'super_admin') {
+  if (!profile || profile.rol !== 'super_admin') {
     return (
       <div className="max-w-lg mx-auto mt-12">
         <Alert variant="destructive">
@@ -76,8 +52,6 @@ export default async function UsuariosPage() {
       </div>
     )
   }
-
-  const usuarios = await listUsers()
 
   return (
     <div>
