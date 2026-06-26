@@ -1,136 +1,115 @@
 'use client'
 
 import { useState } from 'react'
-import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
-  const router = useRouter()
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [showPass, setShowPass] = useState(false)
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
+  async function handleLogin() {
+    if (!email || !password) {
+      setError('Completa todos los campos')
+      return
+    }
+
     setError('')
     setLoading(true)
 
     const supabase = createClient()
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-    setLoading(false)
+    console.log('[Login] resultado:', { data, error })
 
     if (error) {
-      console.error('[Login] Supabase error:', error.message, error.status)
+      console.error('[Login] Supabase error completo:', error)
       setError('Correo o contraseña incorrectos')
+      setLoading(false)
       return
     }
 
-    router.push('/admin/dashboard')
-    router.refresh()
+    // Recarga completa para que middleware lea la cookie de sesión
+    window.location.href = '/admin/dashboard'
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'linear-gradient(135deg, #003087 0%, #005EB8 100%)' }}>
-      <div className="w-full max-w-[420px]">
-        <div className="bg-white rounded-xl shadow-2xl p-10">
+    <div
+      className="min-h-screen flex items-center justify-center"
+      style={{ background: 'linear-gradient(135deg, #003087 0%, #005EB8 100%)' }}
+    >
+      <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md mx-4">
+        <div className="flex flex-col items-center mb-8">
+          <img
+            src="/logo-sintratel.jpg"
+            alt="SINTRATEL"
+            className="h-20 w-20 object-contain mb-4"
+          />
+          <h1 className="text-2xl font-bold text-gray-900">Panel Administrativo</h1>
+          <p className="text-sm text-gray-500 mt-1 text-center">
+            Acceso restringido a personal autorizado
+          </p>
+        </div>
 
-          {/* Logo */}
-          <div className="flex justify-center mb-6">
-            <Image
-              src="/logo-sintratel.jpg"
-              alt="SINTRATEL"
-              width={80}
-              height={80}
-              style={{ objectFit: 'contain', borderRadius: '8px' }}
-              priority
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 text-sm">
+            {error}
+          </div>
+        )}
+
+        <div className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Correo electrónico
+            </label>
+            <input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="correo@ejemplo.com"
+              autoComplete="email"
             />
           </div>
 
-          {/* Títulos */}
-          <h1 className="text-center text-xl font-bold text-[#003087] mb-1">
-            Panel Administrativo
-          </h1>
-          <p className="text-center text-sm text-gray-400 mb-8">
-            Acceso restringido a personal autorizado
-          </p>
-
-          {/* Formulario */}
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Email */}
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                Correo electrónico
-              </label>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Contraseña
+            </label>
+            <div className="relative">
               <input
-                id="email"
-                type="email"
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                required
-                autoComplete="email"
-                placeholder="admin@sintratel.com"
-                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#003087] focus:border-transparent transition"
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="••••••••"
+                autoComplete="current-password"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                {showPassword ? '🙈' : '👁️'}
+              </button>
             </div>
+          </div>
 
-            {/* Password */}
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                Contraseña
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPass ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  required
-                  autoComplete="current-password"
-                  placeholder="••••••••"
-                  className="w-full px-3 py-2.5 pr-10 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[#003087] focus:border-transparent transition"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPass(v => !v)}
-                  tabIndex={-1}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  aria-label={showPass ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                >
-                  {showPass ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-                {error}
-              </p>
-            )}
-
-            {/* Submit */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 rounded-lg text-sm font-semibold text-white transition"
-              style={{ backgroundColor: loading ? '#6b99cc' : '#003087', cursor: loading ? 'not-allowed' : 'pointer' }}
-            >
-              {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
-            </button>
-          </form>
+          <button
+            onClick={handleLogin}
+            disabled={loading}
+            className="w-full py-3 rounded-lg text-white font-semibold text-sm transition-all disabled:opacity-60 disabled:cursor-not-allowed"
+            style={{ backgroundColor: '#003087' }}
+          >
+            {loading ? 'Iniciando sesión...' : 'Iniciar Sesión'}
+          </button>
         </div>
 
-        <p className="text-center text-white/40 text-xs mt-4">
-          © {new Date().getFullYear()} SINTRATEL
-        </p>
+        <p className="text-center text-xs text-gray-400 mt-8">© 2026 SINTRATEL</p>
       </div>
     </div>
   )
