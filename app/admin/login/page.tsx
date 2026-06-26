@@ -2,7 +2,6 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -20,20 +19,26 @@ export default function LoginPage() {
     setError('')
     setLoading(true)
 
-    const supabase = createClient()
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      })
 
-    console.log('[Login] resultado:', { data, error })
+      const data = await res.json()
 
-    if (error) {
-      console.error('[Login] Supabase error completo:', error)
-      setError(`Error Supabase: ${error.message} (status: ${error.status})`)
+      if (!res.ok) {
+        setError(data.error ?? 'Error al iniciar sesión')
+        setLoading(false)
+        return
+      }
+
+      window.location.href = '/admin/dashboard'
+    } catch (e) {
+      setError('Error de red. Intenta de nuevo.')
       setLoading(false)
-      return
     }
-
-    // Recarga completa para que middleware lea la cookie de sesión
-    window.location.href = '/admin/dashboard'
   }
 
   return (
