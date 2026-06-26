@@ -35,7 +35,7 @@ export default function LoginPage() {
       }
 
       window.location.href = '/admin/dashboard'
-    } catch (e) {
+    } catch {
       setError('Error de red. Intenta de nuevo.')
       setLoading(false)
     }
