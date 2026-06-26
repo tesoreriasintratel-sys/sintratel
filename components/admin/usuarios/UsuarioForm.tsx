@@ -2,17 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Loader2, Info } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Profile, UserRole } from '@/types'
 
@@ -75,20 +64,21 @@ export default function UsuarioForm({ open, usuario, onClose, onSaved }: Props) 
     }
 
     setSaving(true)
-    const supabase = createClient()
 
     if (usuario) {
-      // Only update profile fields (name and role)
+      const supabase = createClient()
       const { error: err } = await supabase
         .from('profiles')
         .update({ nombre: form.nombre.trim(), rol: form.rol })
         .eq('id', usuario.id)
 
       setSaving(false)
-      if (err) { setError('Error al actualizar: ' + err.message); return }
+      if (err) {
+        setError('Error al actualizar: ' + err.message)
+        return
+      }
       toast.success('Usuario actualizado correctamente')
     } else {
-      // Create user via API route (needs service role key)
       const res = await fetch('/api/usuarios', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -107,7 +97,7 @@ export default function UsuarioForm({ open, usuario, onClose, onSaved }: Props) 
         setError(data.error ?? 'Error al crear usuario')
         return
       }
-      toast.success('Usuario creado. Se envió un correo de confirmación.')
+      toast.success('Usuario creado exitosamente.')
     }
 
     onSaved()
@@ -116,105 +106,116 @@ export default function UsuarioForm({ open, usuario, onClose, onSaved }: Props) 
 
   const selectedRole = roles.find(r => r.value === form.rol)
 
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>{usuario ? 'Editar Usuario' : 'Nuevo Usuario Administrador'}</DialogTitle>
-        </DialogHeader>
+  if (!open) return null
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
-          <div className="space-y-1">
-            <Label htmlFor="nombre">Nombre Completo *</Label>
-            <Input
-              id="nombre"
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-900">
+            {usuario ? 'Editar Usuario' : 'Nuevo Usuario Administrador'}
+          </h2>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Nombre Completo *</label>
+            <input
+              type="text"
               value={form.nombre}
               onChange={e => set('nombre', e.target.value)}
               placeholder="Nombre del usuario"
               required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087]"
             />
           </div>
 
           {!usuario && (
             <>
-              <div className="space-y-1">
-                <Label htmlFor="email">Correo electrónico *</Label>
-                <Input
-                  id="email"
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Correo electrónico *</label>
+                <input
                   type="email"
                   value={form.email}
                   onChange={e => set('email', e.target.value)}
                   placeholder="correo@empresa.com"
                   required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087]"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="password">Contraseña *</Label>
-                <Input
-                  id="password"
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contraseña *</label>
+                <input
                   type="password"
                   value={form.password}
                   onChange={e => set('password', e.target.value)}
                   placeholder="Mínimo 6 caracteres"
                   required
                   minLength={6}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087]"
                 />
               </div>
 
-              <div className="space-y-1">
-                <Label htmlFor="confirm">Confirmar contraseña *</Label>
-                <Input
-                  id="confirm"
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Confirmar contraseña *</label>
+                <input
                   type="password"
                   value={form.confirmPassword}
                   onChange={e => set('confirmPassword', e.target.value)}
                   placeholder="Repite la contraseña"
                   required
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087]"
                 />
               </div>
             </>
           )}
 
-          <div className="space-y-1">
-            <Label htmlFor="rol">Rol de acceso *</Label>
-            <Select value={form.rol} onValueChange={(v: string | null) => { if (v) set('rol', v) }}>
-              <SelectTrigger id="rol">
-                <SelectValue placeholder="Selecciona un rol" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map(r => (
-                  <SelectItem key={r.value} value={r.value}>
-                    {r.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Rol de acceso *</label>
+            <select
+              value={form.rol}
+              onChange={e => set('rol', e.target.value)}
+              required
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087] bg-white"
+            >
+              {roles.map(r => (
+                <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </select>
             {selectedRole && (
-              <p className="text-xs text-gray-500 flex items-start gap-1 mt-1">
-                <Info size={11} className="mt-0.5 shrink-0" />
-                {selectedRole.description}
-              </p>
+              <p className="text-xs text-gray-500 mt-1">{selectedRole.description}</p>
             )}
           </div>
 
           {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+              {error}
+            </div>
           )}
 
-          <DialogFooter className="gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
+          <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            >
               Cancelar
-            </Button>
-            <Button type="submit" className="bg-[#003087] hover:bg-[#001F5B]" disabled={saving}>
-              {saving && <Loader2 size={14} className="mr-2 animate-spin" />}
-              {usuario ? 'Guardar cambios' : 'Crear usuario'}
-            </Button>
-          </DialogFooter>
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50"
+              style={{ backgroundColor: '#003087' }}
+            >
+              {saving ? 'Guardando...' : usuario ? 'Guardar cambios' : 'Crear usuario'}
+            </button>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   )
 }

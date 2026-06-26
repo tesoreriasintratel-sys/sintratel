@@ -24,7 +24,6 @@ function getRequestingUserClient() {
 export async function POST(request: Request) {
   const supabase = getRequestingUserClient()
 
-  // Verify requester is super_admin
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
@@ -51,13 +50,13 @@ export async function POST(request: Request) {
   }
 
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+  // Warn if service role key looks like the anon key (same JWT payload prefix)
   if (serviceKey === process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
     return NextResponse.json({
-      error: 'SUPABASE_SERVICE_ROLE_KEY no está configurado. Ve a Supabase Dashboard → Settings → API → service_role key y actualiza .env.local',
+      error: 'SUPABASE_SERVICE_ROLE_KEY no está configurado correctamente. Obtén la clave "service_role" en Supabase Dashboard → Settings → API y actualiza .env.local',
     }, { status: 500 })
   }
 
-  // Use service role to create user (bypasses email confirmation)
   const adminClient = createAdminClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     serviceKey,
@@ -72,13 +71,13 @@ export async function POST(request: Request) {
   })
 
   if (createError) {
+    console.error('[/api/usuarios/crear] createUser error:', createError)
     const message = createError.message.includes('already registered')
       ? 'Ya existe un usuario con ese correo'
       : createError.message
     return NextResponse.json({ error: message }, { status: 400 })
   }
 
-  // Update profile with correct data (trigger creates it but may have wrong rol)
   if (newUser?.user) {
     await adminClient
       .from('profiles')

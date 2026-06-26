@@ -2,14 +2,6 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Switch } from '@/components/ui/switch'
-import { Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { Afiliado } from '@/types'
 
@@ -33,6 +25,7 @@ const empty = {
 export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props) {
   const [form, setForm] = useState(empty)
   const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (afiliado) {
@@ -48,6 +41,7 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
     } else {
       setForm(empty)
     }
+    setError('')
   }, [afiliado, open])
 
   function set(field: string, value: string | boolean) {
@@ -56,6 +50,7 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    setError('')
     setSaving(true)
     const supabase = createClient()
 
@@ -69,18 +64,18 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
       activo: form.activo,
     }
 
-    const { error } = afiliado
+    const { error: err } = afiliado
       ? await supabase.from('afiliados').update(payload).eq('id', afiliado.id)
       : await supabase.from('afiliados').insert(payload)
 
     setSaving(false)
 
-    if (error) {
-      if (error.code === '23505') {
-        toast.error('Ya existe un afiliado con esa cédula')
-      } else {
-        toast.error('Error al guardar: ' + error.message)
-      }
+    if (err) {
+      console.error('[AfiliadoForm] error:', err)
+      const msg = err.code === '23505'
+        ? 'Ya existe un afiliado con esa cédula'
+        : 'Error al guardar: ' + err.message
+      setError(msg)
       return
     }
 
@@ -89,63 +84,75 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
     onClose()
   }
 
-  return (
-    <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{afiliado ? 'Editar Afiliado' : 'Nuevo Afiliado'}</DialogTitle>
-        </DialogHeader>
+  if (!open) return null
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" onClick={onClose} />
+
+      {/* Modal */}
+      <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="px-6 py-4 border-b border-gray-100">
+          <h2 className="text-base font-semibold text-gray-900">
+            {afiliado ? 'Editar Afiliado' : 'Nuevo Afiliado'}
+          </h2>
+        </div>
+
+        <form onSubmit={handleSubmit} className="px-6 py-4 space-y-4">
           <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2 space-y-1">
-              <Label htmlFor="nombre_completo">Nombre Completo *</Label>
-              <Input
-                id="nombre_completo"
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Nombre Completo *
+              </label>
+              <input
+                type="text"
                 value={form.nombre_completo}
                 onChange={e => set('nombre_completo', e.target.value)}
                 placeholder="Nombres y apellidos completos"
                 required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087]"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="cedula">Cédula *</Label>
-              <Input
-                id="cedula"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Cédula *</label>
+              <input
+                type="text"
                 value={form.cedula}
                 onChange={e => set('cedula', e.target.value)}
                 placeholder="Número de cédula"
                 required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087]"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="fecha_ingreso">Fecha de Ingreso *</Label>
-              <Input
-                id="fecha_ingreso"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Fecha de Ingreso *</label>
+              <input
                 type="date"
                 value={form.fecha_ingreso}
                 onChange={e => set('fecha_ingreso', e.target.value)}
                 required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087]"
               />
             </div>
 
-            <div className="col-span-2 space-y-1">
-              <Label htmlFor="empresa">Empresa *</Label>
-              <Input
-                id="empresa"
+            <div className="col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1">Empresa *</label>
+              <input
+                type="text"
                 value={form.empresa}
                 onChange={e => set('empresa', e.target.value)}
                 placeholder="Nombre de la empresa"
                 required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087]"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="salario">Salario (COP) *</Label>
-              <Input
-                id="salario"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Salario (COP) *</label>
+              <input
                 type="number"
                 min="0"
                 step="1000"
@@ -153,13 +160,13 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
                 onChange={e => set('salario', e.target.value)}
                 placeholder="0"
                 required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087]"
               />
             </div>
 
-            <div className="space-y-1">
-              <Label htmlFor="cuota">Cuota Sindicato (COP) *</Label>
-              <Input
-                id="cuota"
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Cuota Sindicato (COP) *</label>
+              <input
                 type="number"
                 min="0"
                 step="100"
@@ -167,32 +174,50 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
                 onChange={e => set('cuota_sindicato', e.target.value)}
                 placeholder="0"
                 required
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087]"
               />
             </div>
 
             {afiliado && (
               <div className="col-span-2 flex items-center gap-3">
-                <Switch
-                  id="activo"
-                  checked={form.activo}
-                  onCheckedChange={v => set('activo', v)}
-                />
-                <Label htmlFor="activo">Afiliado activo</Label>
+                <button
+                  type="button"
+                  onClick={() => set('activo', !form.activo)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${form.activo ? 'bg-[#003087]' : 'bg-gray-300'}`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${form.activo ? 'translate-x-4' : 'translate-x-0'}`} />
+                </button>
+                <span className="text-sm font-medium text-gray-700">Afiliado activo</span>
               </div>
             )}
           </div>
 
-          <DialogFooter className="gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50"
+            >
               Cancelar
-            </Button>
-            <Button type="submit" className="bg-[#003087] hover:bg-[#001F5B]" disabled={saving}>
-              {saving && <Loader2 size={14} className="mr-2 animate-spin" />}
-              {afiliado ? 'Guardar cambios' : 'Crear afiliado'}
-            </Button>
-          </DialogFooter>
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 text-sm font-semibold text-white rounded-lg disabled:opacity-50"
+              style={{ backgroundColor: '#003087' }}
+            >
+              {saving ? 'Guardando...' : afiliado ? 'Guardar cambios' : 'Crear afiliado'}
+            </button>
+          </div>
         </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </div>
   )
 }
