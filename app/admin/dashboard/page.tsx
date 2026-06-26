@@ -1,34 +1,49 @@
-import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Users, Shield, User, DollarSign, TrendingUp, Activity } from 'lucide-react'
 
 async function getStats() {
-  const supabase = createClient()
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  const [
-    { count: totalAfiliados },
-    { count: afiliadosActivos },
-    { count: juntaActiva },
-    { count: totalUsuarios },
-  ] = await Promise.all([
-    supabase.from('afiliados').select('*', { count: 'exact', head: true }),
-    supabase.from('afiliados').select('*', { count: 'exact', head: true }).eq('activo', true),
-    supabase.from('junta_directiva').select('*', { count: 'exact', head: true }).eq('activo', true),
-    supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('activo', true),
+  if (!supabaseUrl || !supabaseKey) {
+    return { totalAfiliados: 0, afiliadosActivos: 0, juntaActiva: 0, totalUsuarios: 0, cuotaTotal: 0 }
+  }
+
+  const headers = { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}`, 'Content-Type': 'application/json', Prefer: 'count=exact' }
+
+  const [totalAf, actAf, juntaAct, totalUs, cuotas] = await Promise.allSettled([
+    fetch(`${supabaseUrl}/rest/v1/afiliados?select=id`, { headers }),
+    fetch(`${supabaseUrl}/rest/v1/afiliados?activo=eq.true&select=id`, { headers }),
+    fetch(`${supabaseUrl}/rest/v1/junta_directiva?activo=eq.true&select=id`, { headers }),
+    fetch(`${supabaseUrl}/rest/v1/admin_users?activo=eq.true&select=id`, { headers }),
+    fetch(`${supabaseUrl}/rest/v1/afiliados?activo=eq.true&select=cuota_sindicato`, {
+      headers: { apikey: supabaseKey, Authorization: `Bearer ${supabaseKey}` },
+    }),
   ])
 
-  const { data: cuotas } = await supabase
-    .from('afiliados')
-    .select('cuota_sindicato')
-    .eq('activo', true)
+  function parseCount(r: PromiseSettledResult<Response>): number {
+    if (r.status !== 'fulfilled' || !r.value.ok) return 0
+    const range = r.value.headers.get('content-range')
+    if (!range) return 0
+    const match = range.match(/\/(\d+)$/)
+    return match ? parseInt(match[1]) : 0
+  }
 
-  const cuotaTotal = cuotas?.reduce((s, a) => s + Number(a.cuota_sindicato), 0) ?? 0
+  let cuotaTotal = 0
+  if (cuotas.status === 'fulfilled' && cuotas.value.ok) {
+    try {
+      const rows = await cuotas.value.json() as { cuota_sindicato: number }[]
+      cuotaTotal = rows.reduce((s, a) => s + Number(a.cuota_sindicato), 0)
+    } catch {
+      cuotaTotal = 0
+    }
+  }
 
   return {
-    totalAfiliados: totalAfiliados ?? 0,
-    afiliadosActivos: afiliadosActivos ?? 0,
-    juntaActiva: juntaActiva ?? 0,
-    totalUsuarios: totalUsuarios ?? 0,
+    totalAfiliados: parseCount(totalAf),
+    afiliadosActivos: parseCount(actAf),
+    juntaActiva: parseCount(juntaAct),
+    totalUsuarios: parseCount(totalUs),
     cuotaTotal,
   }
 }
@@ -81,7 +96,6 @@ export default async function DashboardPage() {
         <p className="text-gray-500 text-sm mt-1">Resumen general del sistema SINTRATEL</p>
       </div>
 
-      {/* Stats */}
       <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {cards.map((c, i) => (
           <Card key={i} className="border-0 shadow-sm">
@@ -101,7 +115,6 @@ export default async function DashboardPage() {
         ))}
       </div>
 
-      {/* Quick access */}
       <div className="grid md:grid-cols-2 gap-6">
         <Card className="border-0 shadow-sm">
           <CardHeader className="pb-3">

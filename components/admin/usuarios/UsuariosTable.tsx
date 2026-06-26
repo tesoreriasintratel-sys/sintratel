@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table'
@@ -49,13 +48,14 @@ export default function UsuariosTable({ initialData, currentUserId }: Props) {
 
   const refresh = useCallback(async () => {
     setLoading(true)
-    const supabase = createClient()
-    const { data: fresh } = await supabase
-      .from('profiles')
-      .select('*')
-      .order('nombre')
-    setData(fresh ?? [])
-    setLoading(false)
+    try {
+      const res = await fetch('/api/usuarios')
+      if (res.ok) setData(await res.json())
+    } catch {
+      toast.error('Error al refrescar usuarios')
+    } finally {
+      setLoading(false)
+    }
   }, [])
 
   async function handleToggleActive(u: Profile) {
@@ -63,12 +63,12 @@ export default function UsuariosTable({ initialData, currentUserId }: Props) {
       toast.error('No puedes desactivar tu propia cuenta')
       return
     }
-    const supabase = createClient()
-    const { error } = await supabase
-      .from('profiles')
-      .update({ activo: !u.activo })
-      .eq('id', u.id)
-    if (error) { toast.error('Error al actualizar estado'); return }
+    const res = await fetch(`/api/usuarios/${u.id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ activo: !u.activo }),
+    })
+    if (!res.ok) { toast.error('Error al actualizar estado'); return }
     toast.success(u.activo ? 'Usuario desactivado' : 'Usuario activado')
     refresh()
   }
@@ -78,7 +78,6 @@ export default function UsuariosTable({ initialData, currentUserId }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Toolbar */}
       <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between">
         <div className="relative w-full sm:w-72">
           <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />

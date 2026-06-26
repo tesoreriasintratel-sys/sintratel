@@ -1,7 +1,6 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
 import { toast } from 'sonner'
 import type { Profile, UserRole } from '@/types'
 
@@ -66,17 +65,14 @@ export default function UsuarioForm({ open, usuario, onClose, onSaved }: Props) 
     setSaving(true)
 
     if (usuario) {
-      const supabase = createClient()
-      const { error: err } = await supabase
-        .from('profiles')
-        .update({ nombre: form.nombre.trim(), rol: form.rol })
-        .eq('id', usuario.id)
-
+      const res = await fetch(`/api/usuarios/${usuario.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nombre: form.nombre.trim(), rol: form.rol }),
+      })
       setSaving(false)
-      if (err) {
-        setError('Error al actualizar: ' + err.message)
-        return
-      }
+      const data = await res.json()
+      if (!res.ok) { setError(data.error ?? 'Error al actualizar'); return }
       toast.success('Usuario actualizado correctamente')
     } else {
       const res = await fetch('/api/usuarios', {
@@ -89,14 +85,9 @@ export default function UsuarioForm({ open, usuario, onClose, onSaved }: Props) 
           rol: form.rol,
         }),
       })
-
       setSaving(false)
       const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error ?? 'Error al crear usuario')
-        return
-      }
+      if (!res.ok) { setError(data.error ?? 'Error al crear usuario'); return }
       toast.success('Usuario creado exitosamente.')
     }
 

@@ -5,5 +5,6 @@ export async function POST() {
   const cookieStore = cookies()
   cookieStore.delete('sintratel_token')
   cookieStore.delete('sintratel_refresh')
+  cookieStore.delete('sintratel_user')
   return NextResponse.json({ success: true })
 }
