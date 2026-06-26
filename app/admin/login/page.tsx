@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 
 export default function LoginPage() {
@@ -42,10 +43,13 @@ export default function LoginPage() {
     >
       <div className="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-md mx-4">
         <div className="flex flex-col items-center mb-8">
-          <img
+          <Image
             src="/logo-sintratel.jpg"
             alt="SINTRATEL"
-            className="h-20 w-20 object-contain mb-4"
+            width={80}
+            height={80}
+            className="object-contain mb-4 rounded-lg"
+            priority
           />
           <h1 className="text-2xl font-bold text-gray-900">Panel Administrativo</h1>
           <p className="text-sm text-gray-500 mt-1 text-center">

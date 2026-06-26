@@ -2,14 +2,12 @@
 
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
 import Sidebar from '@/components/admin/Sidebar'
 import TopNav from '@/components/admin/TopNav'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
 import type { Profile } from '@/types'
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const router = useRouter()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [authChecked, setAuthChecked] = useState(false)
