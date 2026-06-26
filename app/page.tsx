@@ -18,7 +18,7 @@ export default function LandingPage() {
             <div>
               <span className="text-[#005EB8] text-sm font-semibold uppercase tracking-wider">Quiénes somos</span>
               <h2 className="mt-2 text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-                Más de 15 años defendiendo a los trabajadores TIC
+                Defendiendo los derechos de los trabajadores TIC
               </h2>
               <p className="text-gray-600 leading-relaxed mb-4">
                 SINTRATEL nació de la necesidad de los trabajadores del sector TIC y servicios

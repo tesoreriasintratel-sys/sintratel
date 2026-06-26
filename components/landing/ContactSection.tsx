@@ -3,9 +3,10 @@
 import { MapPin, Phone, Mail, Clock } from 'lucide-react'
 
 const info = [
-  { icon: MapPin, label: 'Dirección', value: 'Colombia' },
-  { icon: Phone, label: 'Teléfono', value: '+57 (601) 000-0000' },
-  { icon: Mail, label: 'Correo', value: 'contacto@sintratel.com' },
+  { icon: MapPin, label: 'Nombre', value: 'Sintratel - Colombia' },
+  { icon: MapPin, label: 'Dirección', value: 'Bucaramanga, Colombia' },
+  { icon: Phone, label: 'Teléfono', value: '+57 3053407355' },
+  { icon: Mail, label: 'Correo', value: 'sintratelcolombia@gmail.com' },
   { icon: Clock, label: 'Horario', value: 'Lunes a Viernes 8:00am - 5:00pm' },
 ]
 

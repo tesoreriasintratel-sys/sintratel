@@ -1,4 +1,4 @@
-import { ArrowRight, Shield, Users } from 'lucide-react'
+import { ArrowRight, Shield } from 'lucide-react'
 
 export default function Hero() {
   return (
@@ -46,23 +46,6 @@ export default function Hero() {
             </div>
           </div>
 
-          {/* Stats panel */}
-          <div className="grid grid-cols-2 gap-4">
-            {[
-              { label: 'Afiliados Activos', value: '500+', icon: Users },
-              { label: 'Años de trayectoria', value: '15+', icon: Shield },
-              { label: 'Empresas representadas', value: '20+', icon: Shield },
-              { label: 'Convenios logrados', value: '50+', icon: Shield },
-            ].map((stat, i) => (
-              <div
-                key={i}
-                className="bg-white/10 backdrop-blur border border-white/20 rounded-2xl p-6 text-center"
-              >
-                <p className="text-4xl font-bold text-white mb-1">{stat.value}</p>
-                <p className="text-blue-200 text-sm">{stat.label}</p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
 
