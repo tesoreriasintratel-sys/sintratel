@@ -24,7 +24,7 @@ export async function exportAfiliadosExcel(afiliados: Afiliado[]) {
       a.departamento || '',
       a.salario,
       a.cuota_sindicato,
-      a.activo ? 'Activo' : 'Inactivo',
+      a.estado === 'activo' ? 'Activo' : 'Inactivo',
     ]),
     [],
     ['', '', '', '', '', '', '', '', '', '', 'TOTAL:', afiliados.reduce((s, a) => s + Number(a.salario), 0), afiliados.reduce((s, a) => s + Number(a.cuota_sindicato), 0), `${afiliados.length} registros`],
