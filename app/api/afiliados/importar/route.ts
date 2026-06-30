@@ -100,7 +100,7 @@ export async function POST(request: Request) {
         departamento: row.departamento?.trim() || null,
         salario: 0,
         cuota_sindicato: 0,
-        activo: true,
+        estado: 'activo',
         ...(existing ? {} : { fecha_ingreso: today }),
       }
 
