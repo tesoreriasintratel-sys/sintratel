@@ -1,25 +1,8 @@
-import { createServerClient } from '@supabase/ssr'
 import { createClient as createAdminClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
-function getRequestingUserClient() {
-  const cookieStore = cookies()
-  return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll() },
-        setAll(cookiesToSet) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options))
-          } catch {}
-        },
-      },
-    }
-  )
-}
+const ADMIN_SECRET = process.env.ADMIN_TOKEN_SECRET ?? 'sintratel-secret-k9x2m7p4q8'
 
 interface ImportRow {
   nombre_completo: string
@@ -36,18 +19,11 @@ interface ImportRow {
 
 export async function POST(request: Request) {
   try {
-    const supabase = getRequestingUserClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    const cookieStore = cookies()
+    const token = cookieStore.get('sintratel_token')?.value
 
-    const { data: profile } = await supabase
-      .from('user_profiles')
-      .select('rol')
-      .eq('id', user.id)
-      .single()
-
-    if (profile?.rol !== 'super_admin' && profile?.rol !== 'read_write') {
-      return NextResponse.json({ error: 'No tienes permisos para importar afiliados' }, { status: 403 })
+    if (!token || token !== ADMIN_SECRET) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
     }
 
     const body = await request.json()
