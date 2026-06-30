@@ -130,8 +130,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, imported, updated, errors })
 
-  } catch (err: any) {
+  } catch (err) {
     console.error('[/api/afiliados/importar] error:', err)
-    return NextResponse.json({ error: err.message || 'Error interno del servidor' }, { status: 500 })
+    const message = err instanceof Error ? err.message : 'Error interno del servidor'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }
