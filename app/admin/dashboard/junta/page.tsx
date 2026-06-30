@@ -1,17 +1,43 @@
-import { createClient } from '@/lib/supabase/server'
-import { getProfile } from '@/lib/auth'
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import JuntaTable from '@/components/admin/junta/JuntaTable'
+import type { JuntaDirectiva, Profile } from '@/types'
 
-export default async function JuntaPage() {
-  const profile = await getProfile()
-  if (!profile) redirect('/admin/login')
+export default function JuntaPage() {
+  const [profile, setProfile] = useState<Profile | null>(null)
+  const [junta, setJunta] = useState<JuntaDirectiva[]>([])
+  const [loading, setLoading] = useState(true)
 
-  const supabase = createClient()
-  const { data: junta } = await supabase
-    .from('junta_directiva')
-    .select('*')
-    .order('fecha_inicio', { ascending: false })
+  useEffect(() => {
+    async function load() {
+      const meRes = await fetch('/api/me')
+      const meData = await meRes.json()
+      if (meData.error) {
+        window.location.href = '/admin/login'
+        return
+      }
+      setProfile(meData)
+
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('junta_directiva')
+        .select('*')
+        .order('nombre')
+      setJunta(data ?? [])
+      setLoading(false)
+    }
+    load()
+  }, [])
+
+  if (loading || !profile) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#003087]" />
+      </div>
+    )
+  }
 
   return (
     <div>
@@ -21,9 +47,8 @@ export default async function JuntaPage() {
           Integrantes actuales e históricos de la junta directiva de SINTRATEL
         </p>
       </div>
-
       <JuntaTable
-        initialData={junta ?? []}
+        initialData={junta}
         role={profile.rol}
       />
     </div>
