@@ -14,8 +14,15 @@ export interface Afiliado {
   id: string
   nombre_completo: string
   cedula: string
+  email: string | null
+  celular: string | null
   fecha_ingreso: string
   empresa: string
+  cargo: string | null
+  rol_sindical: string | null
+  municipio: string | null
+  sede_laboral: string | null
+  departamento: string | null
   salario: number
   cuota_sindicato: number
   activo: boolean
