@@ -24,6 +24,10 @@ interface RowPreview {
   celular: string
 }
 
+function normalizeKey(key: string): string {
+  return key.trim().toUpperCase()
+}
+
 export default function ImportarExcel({ open, onClose, onImported }: Props) {
   const [, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<RowPreview[]>([])
@@ -58,24 +62,69 @@ export default function ImportarExcel({ open, onClose, onImported }: Props) {
       const XLSX = await import('xlsx')
       const buffer = await f.arrayBuffer()
       const wb = XLSX.read(buffer, { type: 'array' })
-      const sheet = wb.Sheets[wb.SheetNames[0]]
-      const rows: Record<string, string>[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
 
-      const mapped: RowPreview[] = rows.map(r => ({
-        nombre_completo: String(r['NOMBRE'] ?? '').trim(),
-        email: String(r['EMAIL'] ?? '').trim(),
-        cedula: String(r['CEDULA'] ?? '').trim(),
-        empresa: String(r['EMPRESA'] ?? '').trim(),
-        rol_sindical: String(r['ROL'] ?? '').trim(),
-        cargo: String(r['CARGO'] ?? '').trim(),
-        municipio: String(r['MUNICIPIO'] ?? '').trim(),
-        sede_laboral: String(r['SEDE LABORAL'] ?? '').trim(),
-        departamento: String(r['DEPARTAMENTO'] ?? '').trim(),
-        celular: String(r['CELULAR'] ?? '').trim(),
-      })).filter(r => r.nombre_completo && r.cedula)
+      // Buscar la hoja correcta: prioriza una que contenga "AFILIADO" en el nombre,
+      // si no existe usa la primera hoja del archivo
+      const sheetName =
+        wb.SheetNames.find(name => name.toUpperCase().includes('AFILIADO')) ??
+        wb.SheetNames[0]
+
+      const sheet = wb.Sheets[sheetName]
+
+      // Leer como matriz cruda (sin asumir que la fila 1 es el header)
+      const raw: unknown[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
+
+      // Buscar la fila de encabezados: la primera fila que contenga "CEDULA" o "NOMBRE"
+      let headerRowIndex = -1
+      let headers: string[] = []
+
+      for (let i = 0; i < raw.length; i++) {
+        const row = raw[i].map(c => normalizeKey(String(c ?? '')))
+        if (row.some(c => c.includes('CEDULA')) && row.some(c => c.includes('NOMBRE'))) {
+          headerRowIndex = i
+          headers = row
+          break
+        }
+      }
+
+      if (headerRowIndex === -1) {
+        setError('No se encontró una fila de encabezados con las columnas NOMBRE y CEDULA en la hoja "' + sheetName + '".')
+        setParsing(false)
+        return
+      }
+
+      const dataRows = raw.slice(headerRowIndex + 1)
+
+      const colIndex = (name: string) => headers.findIndex(h => h.includes(name))
+
+      const idxNombre = colIndex('NOMBRE')
+      const idxEmail = colIndex('EMAIL')
+      const idxCedula = colIndex('CEDULA')
+      const idxEmpresa = colIndex('EMPRESA')
+      const idxRol = colIndex('ROL')
+      const idxCargo = colIndex('CARGO')
+      const idxMunicipio = colIndex('MUNICIPIO')
+      const idxSede = colIndex('SEDE')
+      const idxDepartamento = colIndex('DEPARTAMENTO')
+      const idxCelular = colIndex('CELULAR')
+
+      const mapped: RowPreview[] = dataRows
+        .map(row => ({
+          nombre_completo: String(row[idxNombre] ?? '').trim(),
+          email: idxEmail >= 0 ? String(row[idxEmail] ?? '').trim() : '',
+          cedula: idxCedula >= 0 ? String(row[idxCedula] ?? '').trim() : '',
+          empresa: idxEmpresa >= 0 ? String(row[idxEmpresa] ?? '').trim() : '',
+          rol_sindical: idxRol >= 0 ? String(row[idxRol] ?? '').trim() : '',
+          cargo: idxCargo >= 0 ? String(row[idxCargo] ?? '').trim() : '',
+          municipio: idxMunicipio >= 0 ? String(row[idxMunicipio] ?? '').trim() : '',
+          sede_laboral: idxSede >= 0 ? String(row[idxSede] ?? '').trim() : '',
+          departamento: idxDepartamento >= 0 ? String(row[idxDepartamento] ?? '').trim() : '',
+          celular: idxCelular >= 0 ? String(row[idxCelular] ?? '').trim() : '',
+        }))
+        .filter(r => r.nombre_completo && r.cedula)
 
       if (mapped.length === 0) {
-        setError('No se encontraron filas válidas. Verifica que el Excel tenga las columnas NOMBRE y CEDULA con datos.')
+        setError(`No se encontraron filas válidas en la hoja "${sheetName}". Verifica que tenga datos de nombre y cédula debajo del encabezado.`)
         setParsing(false)
         return
       }
@@ -145,7 +194,7 @@ export default function ImportarExcel({ open, onClose, onImported }: Props) {
             <>
               <div className="bg-[#e8f0fe] rounded-lg p-4">
                 <p className="text-sm text-gray-700 mb-2">
-                  El archivo debe tener las columnas: <strong>ITEM, NOMBRE, EMAIL, CEDULA, EMPRESA, ROL, CARGO, MUNICIPIO, SEDE LABORAL, DEPARTAMENTO, CELULAR</strong>
+                  El archivo debe tener una hoja con las columnas: <strong>ITEM, NOMBRE, EMAIL, CEDULA, EMPRESA, ROL, CARGO, MUNICIPIO, SEDE LABORAL, DEPARTAMENTO, CELULAR</strong>
                 </p>
                 <button
                   onClick={() => exportPlantillaAfiliados()}
