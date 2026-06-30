@@ -24,7 +24,7 @@ import { exportAfiliadosExcel } from '@/lib/reports/excel'
 const formatCOP = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n)
 
-const formatDate = (d: string) => format(new Date(d + 'T00:00:00'), 'dd/MM/yyyy', { locale: es })
+
 
 interface Props {
   initialData: Afiliado[]
