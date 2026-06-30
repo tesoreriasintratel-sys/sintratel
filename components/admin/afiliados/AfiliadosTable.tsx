@@ -11,8 +11,6 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Pencil, Trash2, Search, Plus, FileText, FileSpreadsheet, Eye, Upload } from 'lucide-react'
 import { toast } from 'sonner'
-import { format } from 'date-fns'
-import { es } from 'date-fns/locale'
 import type { Afiliado } from '@/types'
 import type { UserRole } from '@/types'
 import AfiliadoForm from './AfiliadoForm'
@@ -23,8 +21,6 @@ import { exportAfiliadosExcel } from '@/lib/reports/excel'
 
 const formatCOP = (n: number) =>
   new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', maximumFractionDigits: 0 }).format(n)
-
-
 
 interface Props {
   initialData: Afiliado[]
