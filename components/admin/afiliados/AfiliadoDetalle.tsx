@@ -67,7 +67,7 @@ export default function AfiliadoDetalle({ afiliado, onClose }: Props) {
           </h3>
           <Row label="Salario" value={formatCOP(afiliado.salario)} />
           <Row label="Cuota sindicato" value={formatCOP(afiliado.cuota_sindicato)} />
-          <Row label="Estado" value={afiliado.activo ? 'Activo' : 'Inactivo'} />
+          <Row label="Estado" value={afiliado.estado === 'activo' ? 'Activo' : 'Inactivo'} />
         </div>
 
         <div className="px-6 py-4 border-t border-gray-100 flex justify-end gap-2 sticky bottom-0 bg-white">
