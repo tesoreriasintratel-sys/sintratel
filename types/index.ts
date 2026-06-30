@@ -5,7 +5,7 @@ export interface Profile {
   nombre: string
   email: string
   rol: UserRole
-  activo: string
+  activo: boolean
   created_at: string
   updated_at: string
 }
@@ -25,7 +25,7 @@ export interface Afiliado {
   departamento: string | null
   salario: number
   cuota_sindicato: number
-  activo: boolean
+  estado: string
   created_at: string
   updated_at: string
 }
