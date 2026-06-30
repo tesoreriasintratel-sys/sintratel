@@ -5,7 +5,7 @@ export interface Profile {
   nombre: string
   email: string
   rol: UserRole
-  activo: boolean
+  activo: string
   created_at: string
   updated_at: string
 }
