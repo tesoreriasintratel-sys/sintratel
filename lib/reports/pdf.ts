@@ -13,7 +13,6 @@ export async function exportAfiliadosPDF(afiliados: Afiliado[]) {
   const { default: autoTable } = await import('jspdf-autotable')
   const doc = new jsPDF({ orientation: 'landscape' })
 
-  // Header
   doc.setFillColor(0, 48, 135)
   doc.rect(0, 0, 297, 30, 'F')
   doc.setTextColor(255, 255, 255)
@@ -38,7 +37,7 @@ export async function exportAfiliadosPDF(afiliados: Afiliado[]) {
       a.celular || '—',
       formatCurrency(a.salario),
       formatCurrency(a.cuota_sindicato),
-      a.activo ? 'Activo' : 'Inactivo',
+      a.estado === 'activo' ? 'Activo' : 'Inactivo',
     ]),
     headStyles: { fillColor: [0, 48, 135], textColor: [255, 255, 255], fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [232, 240, 247] },
@@ -57,7 +56,6 @@ export async function exportFichaAfiliadoPDF(afiliado: Afiliado) {
   const { default: jsPDF } = await import('jspdf')
   const doc = new jsPDF()
 
-  // Header
   doc.setFillColor(0, 48, 135)
   doc.rect(0, 0, 210, 35, 'F')
   doc.setTextColor(255, 255, 255)
@@ -113,7 +111,7 @@ export async function exportFichaAfiliadoPDF(afiliado: Afiliado) {
   section('DATOS SINDICALES')
   row('Salario', formatCurrency(afiliado.salario))
   row('Cuota sindicato', formatCurrency(afiliado.cuota_sindicato))
-  row('Estado', afiliado.activo ? 'Activo' : 'Inactivo')
+  row('Estado', afiliado.estado === 'activo' ? 'Activo' : 'Inactivo')
 
   doc.setFillColor(0, 48, 135)
   doc.rect(0, 280, 210, 17, 'F')
