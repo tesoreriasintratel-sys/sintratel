@@ -246,3 +246,21 @@ export default function AfiliadosTable({ initialData, role }: Props) {
         open={formOpen}
         afiliado={editing}
         onClose={() => setFormOpen(false)}
+        onSaved={refresh}
+      />
+
+      {/* Detalle modal */}
+      <AfiliadoDetalle
+        afiliado={viewing}
+        onClose={() => setViewing(null)}
+      />
+
+      {/* Importar Excel modal */}
+      <ImportarExcel
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={refresh}
+      />
+    </div>
+  )
+}
