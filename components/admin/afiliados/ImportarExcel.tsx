@@ -25,7 +25,7 @@ interface RowPreview {
 }
 
 export default function ImportarExcel({ open, onClose, onImported }: Props) {
-  const [file, setFile] = useState<File | null>(null)
+  const [, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<RowPreview[]>([])
   const [allRows, setAllRows] = useState<RowPreview[]>([])
   const [parsing, setParsing] = useState(false)
@@ -59,7 +59,7 @@ export default function ImportarExcel({ open, onClose, onImported }: Props) {
       const buffer = await f.arrayBuffer()
       const wb = XLSX.read(buffer, { type: 'array' })
       const sheet = wb.Sheets[wb.SheetNames[0]]
-      const rows: any[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
+      const rows: Record<string, string>[] = XLSX.utils.sheet_to_json(sheet, { defval: '' })
 
       const mapped: RowPreview[] = rows.map(r => ({
         nombre_completo: String(r['NOMBRE'] ?? '').trim(),
@@ -114,9 +114,10 @@ export default function ImportarExcel({ open, onClose, onImported }: Props) {
       setResult(data)
       toast.success(`Importación completa: ${data.imported} nuevos, ${data.updated} actualizados`)
       onImported()
-    } catch (err: any) {
+    } catch (err) {
       console.error(err)
-      setError(err.message || 'Error al importar los datos')
+      const message = err instanceof Error ? err.message : 'Error al importar los datos'
+      setError(message)
     }
     setImporting(false)
   }
