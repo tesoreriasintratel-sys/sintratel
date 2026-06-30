@@ -12,13 +12,11 @@ export async function getProfile(): Promise<Profile | null> {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return null
-
   const { data } = await supabase
-    .from('profiles')
+    .from('user_profiles')
     .select('*')
     .eq('id', user.id)
     .single()
-
   return data
 }
 
