@@ -26,7 +26,7 @@ const empty = {
   departamento: '',
   salario: '',
   cuota_sindicato: '',
-  activo: true,
+  estado: 'activo',
 }
 
 export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props) {
@@ -50,7 +50,7 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
         departamento: afiliado.departamento ?? '',
         salario: String(afiliado.salario),
         cuota_sindicato: String(afiliado.cuota_sindicato),
-        activo: afiliado.activo,
+        estado: afiliado.estado ?? 'activo',
       })
     } else {
       setForm(empty)
@@ -58,7 +58,7 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
     setError('')
   }, [afiliado, open])
 
-  function set(field: string, value: string | boolean) {
+  function set(field: string, value: string) {
     setForm(p => ({ ...p, [field]: value }))
   }
 
@@ -82,7 +82,7 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
       departamento: form.departamento.trim() || null,
       salario: parseFloat(form.salario) || 0,
       cuota_sindicato: parseFloat(form.cuota_sindicato) || 0,
-      activo: form.activo,
+      estado: form.estado,
     }
 
     const { error: err } = afiliado
@@ -109,10 +109,8 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
 
-      {/* Modal */}
       <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         <div className="px-6 py-4 border-b border-gray-100 sticky top-0 bg-white z-10">
           <h2 className="text-base font-semibold text-gray-900">
@@ -122,7 +120,6 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
 
         <form onSubmit={handleSubmit} className="px-6 py-4 space-y-6">
 
-          {/* SECCIÓN: Datos Personales */}
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-[#003087] mb-3">
               Datos Personales
@@ -189,7 +186,6 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
             </div>
           </div>
 
-          {/* SECCIÓN: Datos Laborales */}
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-[#003087] mb-3">
               Datos Laborales
@@ -261,7 +257,6 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
             </div>
           </div>
 
-          {/* SECCIÓN: Datos Sindicales */}
           <div>
             <h3 className="text-xs font-semibold uppercase tracking-wide text-[#003087] mb-3">
               Datos Sindicales
@@ -295,18 +290,17 @@ export default function AfiliadoForm({ open, afiliado, onClose, onSaved }: Props
                 />
               </div>
 
-              {afiliado && (
-                <div className="col-span-2 flex items-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => set('activo', !form.activo)}
-                    className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${form.activo ? 'bg-[#003087]' : 'bg-gray-300'}`}
-                  >
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${form.activo ? 'translate-x-4' : 'translate-x-0'}`} />
-                  </button>
-                  <span className="text-sm font-medium text-gray-700">Afiliado activo</span>
-                </div>
-              )}
+              <div className="col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Estado</label>
+                <select
+                  value={form.estado}
+                  onChange={e => set('estado', e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#003087]"
+                >
+                  <option value="activo">Activo</option>
+                  <option value="inactivo">Inactivo</option>
+                </select>
+              </div>
             </div>
           </div>
 
