@@ -33,8 +33,15 @@ export interface Afiliado {
 export interface JuntaDirectiva {
   id: string
   nombre: string
+  cedula: string | null
+  email: string | null
+  celular: string | null
+  empresa: string | null
+  municipio: string | null
+  sede_laboral: string | null
+  departamento: string | null
   cargo: string
-  fecha_inicio: string
+  fecha_inicio: string | null
   fecha_fin: string | null
   activo: boolean
   created_at: string
