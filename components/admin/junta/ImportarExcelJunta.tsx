@@ -22,10 +22,6 @@ interface RowPreview {
   celular: string
 }
 
-function normalizeKey(key: string): string {
-  return key.trim().toUpperCase()
-}
-
 export default function ImportarExcelJunta({ open, onClose, onImported }: Props) {
   const [, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<RowPreview[]>([])
@@ -58,6 +54,7 @@ export default function ImportarExcelJunta({ open, onClose, onImported }: Props)
       const buffer = await f.arrayBuffer()
       const wb = XLSX.read(buffer, { type: 'array' })
 
+      // Buscar hoja que contenga JUNTA
       const sheetName =
         wb.SheetNames.find(name => name.toUpperCase().includes('JUNTA')) ??
         wb.SheetNames[0]
@@ -65,57 +62,44 @@ export default function ImportarExcelJunta({ open, onClose, onImported }: Props)
       const sheet = wb.Sheets[sheetName]
       const raw: unknown[][] = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' })
 
+      // Buscar fila de encabezados (la que tenga NOMBRE)
       let headerRowIndex = -1
-      let headers: string[] = []
-
       for (let i = 0; i < raw.length; i++) {
-        const row = raw[i].map(c => normalizeKey(String(c ?? '')))
+        const row = raw[i].map(c => String(c ?? '').trim().toUpperCase())
         if (row.some(c => c.includes('NOMBRE'))) {
           headerRowIndex = i
-          headers = row
           break
         }
       }
 
       if (headerRowIndex === -1) {
-        setError('No se encontró una fila de encabezados con la columna NOMBRE.')
+        setError('No se encontró fila de encabezados con NOMBRE.')
         setParsing(false)
         return
       }
 
       const dataRows = raw.slice(headerRowIndex + 1)
-      const colIndex = (name: string) => headers.findIndex(h => h.includes(name))
 
-      const idxNombre = colIndex('NOMBRE')
-      const idxEmail = colIndex('EMAIL')
-      const idxCedula = colIndex('CEDULA')
-      const idxEmpresa = colIndex('EMPRESA')
-      const idxMunicipio = colIndex('MUNICIPIO')
-      const idxSede = colIndex('SEDE')
-      const idxDepartamento = colIndex('DEPARTAMENTO')
-      const idxCelular = colIndex('CELULAR')
-
-      // Cargo está en la columna sin header (índice 3 en tu Excel)
-      // La detectamos buscando la columna vacía entre EMAIL y CEDULA
-      const idxCargoJunta = headers.findIndex((h, i) => h === '' && i > 1 && i < idxCedula)
-      const cargoIndex = idxCargoJunta >= 0 ? idxCargoJunta : colIndex('ROL')
-
+      // Índices fijos basados en la estructura real del Excel:
+      // 0:ITEM, 1:NOMBRE, 2:EMAIL, 3:CARGO_JUNTA(sin header), 4:CEDULA,
+      // 5:EMPRESA, 6:ROL, 7:CARGO(vacío), 8:MUNICIPIO, 9:SEDE LABORAL,
+      // 10:DEPARTAMENTO, 11:CELULAR
       const mapped: RowPreview[] = dataRows
         .map(row => ({
-          nombre: String(row[idxNombre] ?? '').trim(),
-          email: idxEmail >= 0 ? String(row[idxEmail] ?? '').trim() : '',
-          cedula: idxCedula >= 0 ? String(row[idxCedula] ?? '').trim() : '',
-          empresa: idxEmpresa >= 0 ? String(row[idxEmpresa] ?? '').trim() : '',
-          cargo_junta: cargoIndex >= 0 ? String(row[cargoIndex] ?? '').trim() : '',
-          municipio: idxMunicipio >= 0 ? String(row[idxMunicipio] ?? '').trim() : '',
-          sede_laboral: idxSede >= 0 ? String(row[idxSede] ?? '').trim() : '',
-          departamento: idxDepartamento >= 0 ? String(row[idxDepartamento] ?? '').trim() : '',
-          celular: idxCelular >= 0 ? String(row[idxCelular] ?? '').trim() : '',
+          nombre: String(row[1] ?? '').trim(),
+          email: String(row[2] ?? '').trim(),
+          cargo_junta: String(row[3] ?? '').trim(),
+          cedula: String(row[4] ?? '').trim(),
+          empresa: String(row[5] ?? '').trim(),
+          municipio: String(row[8] ?? '').trim(),
+          sede_laboral: String(row[9] ?? '').trim(),
+          departamento: String(row[10] ?? '').trim(),
+          celular: String(row[11] ?? '').trim(),
         }))
-        .filter(r => r.nombre)
+        .filter(r => r.nombre && r.nombre !== 'NOMBRE')
 
       if (mapped.length === 0) {
-        setError('No se encontraron filas válidas.')
+        setError('No se encontraron filas válidas con datos de nombre.')
         setParsing(false)
         return
       }
@@ -124,7 +108,7 @@ export default function ImportarExcelJunta({ open, onClose, onImported }: Props)
       setPreview(mapped.slice(0, 5))
     } catch (err) {
       console.error(err)
-      setError('No se pudo leer el archivo.')
+      setError('No se pudo leer el archivo. Verifica que sea un Excel válido (.xlsx)')
     }
     setParsing(false)
   }
@@ -173,7 +157,9 @@ export default function ImportarExcelJunta({ open, onClose, onImported }: Props)
             <FileSpreadsheet size={18} className="text-[#003087]" />
             Importar Junta Directiva desde Excel
           </h2>
-          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
+          <button onClick={handleClose} className="text-gray-400 hover:text-gray-600">
+            <X size={18} />
+          </button>
         </div>
 
         <div className="px-6 py-5 space-y-5">
@@ -181,14 +167,20 @@ export default function ImportarExcelJunta({ open, onClose, onImported }: Props)
             <>
               <div className="bg-[#e8f0fe] rounded-lg p-4">
                 <p className="text-sm text-gray-700">
-                  Usa el mismo Excel de afiliados — el sistema leerá automáticamente la hoja <strong>JUNTA DIRECTIVA</strong>.
+                  Sube el Excel con la hoja <strong>JUNTA DIRECTIVA</strong>. El sistema detectará automáticamente los datos.
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Selecciona el archivo Excel (.xlsx)</label>
-                <input type="file" accept=".xlsx,.xls" onChange={handleFile}
-                  className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#003087] file:text-white hover:file:bg-[#001F5B] file:cursor-pointer cursor-pointer" />
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Selecciona el archivo Excel (.xlsx)
+                </label>
+                <input
+                  type="file"
+                  accept=".xlsx,.xls"
+                  onChange={handleFile}
+                  className="block w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-[#003087] file:text-white hover:file:bg-[#001F5B] file:cursor-pointer cursor-pointer"
+                />
               </div>
 
               {parsing && <p className="text-sm text-gray-500">Leyendo archivo...</p>}
@@ -236,7 +228,9 @@ export default function ImportarExcelJunta({ open, onClose, onImported }: Props)
               <CheckCircle2 size={20} className="text-green-600 shrink-0 mt-0.5" />
               <div>
                 <p className="font-medium text-green-900">Importación completada</p>
-                <p className="text-sm text-green-700 mt-1">{result.imported} nuevos, {result.updated} actualizados.</p>
+                <p className="text-sm text-green-700 mt-1">
+                  {result.imported} nuevos, {result.updated} actualizados.
+                </p>
                 {result.errors.length > 0 && (
                   <ul className="text-xs text-red-600 list-disc list-inside mt-2">
                     {result.errors.slice(0, 5).map((e, i) => <li key={i}>{e}</li>)}
