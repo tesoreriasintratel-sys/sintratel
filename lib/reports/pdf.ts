@@ -126,6 +126,7 @@ export async function exportJuntaPDF(junta: JuntaDirectiva[]) {
   const { default: jsPDF } = await import('jspdf')
   const { default: autoTable } = await import('jspdf-autotable')
   const doc = new jsPDF()
+
   doc.setFillColor(0, 48, 135)
   doc.rect(0, 0, 210, 30, 'F')
   doc.setTextColor(255, 255, 255)
@@ -138,19 +139,94 @@ export async function exportJuntaPDF(junta: JuntaDirectiva[]) {
   doc.setFontSize(9)
   doc.text(`Generado: ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es })}`, 105, 27, { align: 'center' })
   doc.setTextColor(0, 0, 0)
+
   autoTable(doc, {
     startY: 35,
-    head: [['Nombre', 'Cargo', 'F. Inicio', 'F. Fin', 'Estado']],
+    head: [['Nombre', 'Cargo', 'Cédula', 'Empresa', 'Municipio', 'Estado']],
     body: junta.map(j => [
       j.nombre,
       j.cargo,
-      formatDate(j.fecha_inicio),
-      j.fecha_fin ? formatDate(j.fecha_fin) : 'Vigente',
+      j.cedula || '—',
+      j.empresa || '—',
+      j.municipio || '—',
       j.activo ? 'Activo' : 'Inactivo',
     ]),
     headStyles: { fillColor: [0, 48, 135], textColor: [255, 255, 255], fontStyle: 'bold' },
     alternateRowStyles: { fillColor: [232, 240, 247] },
     styles: { fontSize: 9 },
+    foot: [[
+      { content: `Total miembros: ${junta.length}`, colSpan: 6, styles: { fontStyle: 'bold' } },
+    ]],
+    footStyles: { fillColor: [0, 48, 135], textColor: [255, 255, 255] },
   })
+
   doc.save(`SINTRATEL_JuntaDirectiva_${format(new Date(), 'yyyyMMdd')}.pdf`)
+}
+
+export async function exportFichaJuntaPDF(miembro: JuntaDirectiva) {
+  const { default: jsPDF } = await import('jspdf')
+  const doc = new jsPDF()
+
+  doc.setFillColor(0, 48, 135)
+  doc.rect(0, 0, 210, 35, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(20)
+  doc.setFont('helvetica', 'bold')
+  doc.text('SINTRATEL', 105, 14, { align: 'center' })
+  doc.setFontSize(11)
+  doc.setFont('helvetica', 'normal')
+  doc.text('Ficha Junta Directiva', 105, 22, { align: 'center' })
+  doc.setFontSize(9)
+  doc.text(`Generado: ${format(new Date(), "dd 'de' MMMM 'de' yyyy", { locale: es })}`, 105, 29, { align: 'center' })
+
+  doc.setTextColor(0, 0, 0)
+  let y = 48
+
+  const section = (title: string) => {
+    doc.setFillColor(232, 240, 247)
+    doc.rect(15, y - 5, 180, 8, 'F')
+    doc.setFontSize(10)
+    doc.setFont('helvetica', 'bold')
+    doc.setTextColor(0, 48, 135)
+    doc.text(title, 18, y)
+    doc.setTextColor(0, 0, 0)
+    y += 10
+  }
+
+  const row = (label: string, value: string) => {
+    doc.setFontSize(9)
+    doc.setFont('helvetica', 'bold')
+    doc.text(label + ':', 18, y)
+    doc.setFont('helvetica', 'normal')
+    doc.text(value || '—', 75, y)
+    y += 7
+  }
+
+  section('DATOS PERSONALES')
+  row('Nombre completo', miembro.nombre)
+  row('Cédula', miembro.cedula || '—')
+  row('Email', miembro.email || '—')
+  row('Celular', miembro.celular || '—')
+
+  y += 4
+  section('DATOS LABORALES')
+  row('Empresa', miembro.empresa || '—')
+  row('Municipio', miembro.municipio || '—')
+  row('Sede laboral', miembro.sede_laboral || '—')
+  row('Departamento', miembro.departamento || '—')
+
+  y += 4
+  section('CARGO EN JUNTA DIRECTIVA')
+  row('Cargo', miembro.cargo)
+  row('Fecha inicio', miembro.fecha_inicio || 'No registrada')
+  row('Fecha fin', miembro.fecha_fin || 'Vigente')
+  row('Estado', miembro.activo ? 'Activo' : 'Inactivo')
+
+  doc.setFillColor(0, 48, 135)
+  doc.rect(0, 280, 210, 17, 'F')
+  doc.setTextColor(255, 255, 255)
+  doc.setFontSize(8)
+  doc.text('SINTRATEL - Sindicato de Trabajadores de las TICs y los Servicios Públicos Domiciliarios', 105, 290, { align: 'center' })
+
+  doc.save(`SINTRATEL_JuntaDirectiva_${miembro.nombre.replace(/ /g, '_')}.pdf`)
 }
