@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { X, Upload, Download, FileSpreadsheet, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { X, Upload, FileSpreadsheet, AlertCircle, CheckCircle2 } from 'lucide-react'
 import { toast } from 'sonner'
 
 interface Props {
