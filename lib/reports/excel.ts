@@ -61,11 +61,17 @@ export async function exportJuntaExcel(junta: JuntaDirectiva[]) {
     ['SINTRATEL - Junta Directiva'],
     [`Generado: ${format(new Date(), 'dd/MM/yyyy HH:mm')}`],
     [],
-    ['Nombre', 'Cargo', 'Fecha Inicio', 'Fecha Fin', 'Estado'],
+    ['Nombre', 'Cargo', 'Cédula', 'Email', 'Celular', 'Empresa', 'Municipio', 'Departamento', 'Fecha Inicio', 'Fecha Fin', 'Estado'],
     ...junta.map(j => [
       j.nombre,
       j.cargo,
-      formatDate(j.fecha_inicio),
+      j.cedula || '',
+      j.email || '',
+      j.celular || '',
+      j.empresa || '',
+      j.municipio || '',
+      j.departamento || '',
+      j.fecha_inicio ? formatDate(j.fecha_inicio) : 'No registrada',
       j.fecha_fin ? formatDate(j.fecha_fin) : 'Vigente',
       j.activo ? 'Activo' : 'Inactivo',
     ]),
@@ -74,7 +80,8 @@ export async function exportJuntaExcel(junta: JuntaDirectiva[]) {
   ]
   const ws = utils.aoa_to_sheet(data)
   ws['!cols'] = [
-    { wch: 35 }, { wch: 25 }, { wch: 14 }, { wch: 14 }, { wch: 10 },
+    { wch: 35 }, { wch: 25 }, { wch: 14 }, { wch: 28 }, { wch: 14 },
+    { wch: 25 }, { wch: 16 }, { wch: 16 }, { wch: 14 }, { wch: 14 }, { wch: 10 },
   ]
   const wb = utils.book_new()
   utils.book_append_sheet(wb, ws, 'Junta Directiva')
